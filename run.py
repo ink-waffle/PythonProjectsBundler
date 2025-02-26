@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-def combine_python_files(directory_path: str, output_file: str = "output/combined_script.py", exclude_dirs: set = {'.venv'}):
+def combine_python_files(directory_path: str, output_file: str = "output/combined_script.txt", formats = [".py"], exclude_dirs: set = {'.venv'}):
     directory_path = Path(directory_path).resolve()
     output_file = Path(output_file)
 
@@ -13,7 +13,9 @@ def combine_python_files(directory_path: str, output_file: str = "output/combine
         return
 
     python_files = []
-    for path in directory_path.rglob('*.py'):
+    patterns = [("*" + format) for format in formats]
+    paths = [file for pattern in patterns for file in directory_path.rglob(pattern)]
+    for path in paths:
         # skip exluded
         if any(excluded in path.parts for excluded in exclude_dirs):
             continue
@@ -55,11 +57,13 @@ def main():
     parser.add_argument('directory', help='Directory containing Python files')
     parser.add_argument('-o', '--output', default='output/combined_script.txt',
                       help='Output filename (default: output/combined_script.txt)')
+    parser.add_argument('-f', '--formats', nargs='*', default={'.py'},
+                      help='Subdirectories to exclude, space-separated (default: .py)')
     parser.add_argument('-e', '--exclude', nargs='*', default={'.venv'},
                       help='Subdirectories to exclude, space-separated (default: .venv)')
 
     args = parser.parse_args()
-    combine_python_files(args.directory, args.output, args.exclude)
+    combine_python_files(args.directory, args.output, args.formats, args.exclude)
 
 if __name__ == "__main__":
     main()
